@@ -2,6 +2,7 @@ import logging
 from pathlib import Path
 from typing import Dict, List
 
+import pymupdf4llm
 import pytesseract
 from PIL import Image
 
@@ -83,5 +84,15 @@ class OCRExtractor:
     def _run_pdf_ocr_single_file(cls, file_path: Path) -> str:
         _log.info(f"Using PDF OCR extractor")
 
-        # TODO - implement
-        return ""
+        markdown_doc: str = pymupdf4llm.to_markdown(file_path)
+
+        return markdown_doc
+
+
+if __name__ == '__main__':
+    # Enter a test path
+    file_path = Path('files', 'invoice_2.pdf')
+
+    _log.info(f"Extracting text from {file_path.name}")
+
+    _log.info(OCRExtractor.extract_text(file_path))

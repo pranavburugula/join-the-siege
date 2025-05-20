@@ -1,5 +1,6 @@
 from pathlib import Path
 from unittest import TestCase
+from unittest.mock import patch
 
 from src.feature_extraction.ocr_extractor import OCRExtractor
 
@@ -43,3 +44,11 @@ class TestOCRExtractor(TestCase):
         with self.assertRaises(ValueError):
             OCRExtractor.extract_all_documents(file_path)
     
+    def test_extract_text_from_pdf(self):
+        file_path = Path('files/bank_statement_1.pdf')
+
+        text_md = OCRExtractor.extract_text(file_path)
+        
+        comparison = "Account Number: XXXX-XXXX-XXXX-6781"
+
+        self.assertTrue(comparison in text_md)
