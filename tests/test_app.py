@@ -1,7 +1,11 @@
 from io import BytesIO
+from unittest.mock import MagicMock
 
 import pytest
 from src.app import app, allowed_file
+from src.classifier.filename_classifier import FilenameClassifier
+from src.types.document_type import DocumentType
+from src.types.classifier_output import ClassifierOutput
 
 @pytest.fixture
 def client():
@@ -30,9 +34,12 @@ def test_no_selected_file(client):
     assert response.status_code == 400
 
 def test_success(client, mocker):
-    mocker.patch('src.app.classify_file', return_value='test_class')
+    mock_classifier = MagicMock(spec=FilenameClassifier)
+    mocker.patch('src.app.FilenameClassifier', return_value=mock_classifier)
+
+    mock_classifier.classify.return_value = ClassifierOutput(output_class=DocumentType.DRIVERS_LICENSE)
 
     data = {'file': (BytesIO(b"dummy content"), 'file.pdf')}
     response = client.post('/classify_file', data=data, content_type='multipart/form-data')
     assert response.status_code == 200
-    assert response.get_json() == {"file_class": "test_class"}
+    assert response.get_json() == {"file_class": "drivers_license"}
