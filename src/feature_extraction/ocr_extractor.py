@@ -77,7 +77,7 @@ class OCRExtractor:
             text: str = pytesseract.image_to_string(image)
             return text
         except Exception:
-            _log.error(f"Error extracting text from image {file_path.name}")
+            _log.exception(f"Error extracting text from image {file_path.name}")
             raise
     
     @classmethod
