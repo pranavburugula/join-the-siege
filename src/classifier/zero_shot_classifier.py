@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import List
+from typing import Dict, List
 from src.classifier import Classifier
 
 from transformers.pipelines import pipeline
@@ -27,47 +27,59 @@ class ZeroShotClassifier(Classifier):
         )
     
     def classify(self, input: ClassifierInput) -> ClassifierOutput:
-        _log.info(f"Classifying file {input.file}")
+        _log.info(f"Classifying files {input.files}")
 
-        # Use OCR to get text from file
+        # Use OCR to get text from files
         try:
             _log.info("Extracting text from file")
-            text = OCRExtractor.extract_text(input.file)
+            text_per_file: Dict[Path, str] = OCRExtractor.extract_all_documents(paths_list=input.files)
         except Exception:
-            _log.exception(f"Failed to run OCR extraction on file {input.file}. Returning UNKNOWN")
-            return ClassifierOutput(output_class=DocumentType.UNKNOWN)
+            _log.exception(f"Failed to run OCR extraction on file {input.files}. Returning UNKNOWN")
+            return ClassifierOutput(output_per_file={
+                file: DocumentType.UNKNOWN
+                for file in input.files
+            })
+
+        labels: List[str] = [doc_type.value for doc_type in DocumentType]
+
+        outputs_per_file: Dict[Path, DocumentType] = {}
+
+        for file_path, text in text_per_file.items():
+            if not text:
+                _log.warning(f"No text extracted from file {input.files}. Returning UNKNOWN")
+                outputs_per_file[file_path] = DocumentType.UNKNOWN
+                continue
+
+            _log.info(f"Got {len(text)} chars from file. Invoking zero-shot classification pipeline")
+
+            
+            # Call HF zero-shot pipeline
+            result = self._model_pipeline(
+                text,
+                candidate_labels=labels,
+            )
+
+            if not result or 'scores' not in result or 'labels' not in result:
+                _log.error(f"Unknown error prevented model from generating outputs. Returning UNKNOWN")
+                outputs_per_file[file_path] = DocumentType.UNKNOWN
+                continue
 
 
-        if not text:
-            _log.warning(f"No text extracted from file {input.file}. Returning UNKNOWN")
-            return ClassifierOutput(output_class=DocumentType.UNKNOWN)
+            # Get the label with the highest confidence score to return as classification
+            scores: List[float] = result['scores']
+            labels: List[str] = result['labels']
 
-        _log.info(f"Got {len(text)} chars from file. Invoking zero-shot classification pipeline")
+            max_score_index = scores.index(max(scores))
 
-        
-        # Call HF zero-shot pipeline
-        result = self._model_pipeline(
-            text,
-            candidate_labels=[doc_type.value for doc_type in DocumentType],
-        )
+            pred_label = labels[max_score_index]
+            pred_score = scores[max_score_index]
 
-        if not result or 'scores' not in result or 'labels' not in result:
-            _log.error(f"Unknown error prevented model from generating outputs. Returning UNKNOWN")
-            return ClassifierOutput(output_class=DocumentType.UNKNOWN)
+            _log.info(f"Classified doc as {pred_label} with score {pred_score}")
+            outputs_per_file[file_path] = DocumentType(pred_label)
 
 
-        # Get the label with the highest confidence score to return as classification
-        scores: List[float] = result['scores']
-        labels: List[str] = result['labels']
-
-        max_score_index = scores.index(max(scores))
-
-        pred_label = labels[max_score_index]
-        pred_score = scores[max_score_index]
-
-        _log.info(f"Classified doc as {pred_label} with score {pred_score}")
-
-        return ClassifierOutput(output_class=DocumentType(pred_label))
+        _log.info(f"Completed classifying {len(input.files)} files")
+        return ClassifierOutput(output_per_file=outputs_per_file)
 
 
 if __name__ == "__main__":
@@ -76,4 +88,4 @@ if __name__ == "__main__":
     _log.info(f"Classifying file {file_path}")
 
     classifier = ZeroShotClassifier()
-    _log.info(f"Got {classifier.classify(ClassifierInput(file_path))}")
+    _log.info(f"Got {classifier.classify(ClassifierInput([file_path]))}")

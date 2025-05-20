@@ -28,7 +28,7 @@ def classify_file_route():
     classifier = FilenameClassifier()
 
     # Invoke classifier with input filepath
-    input = ClassifierInput(file=Path(file.filename))
+    input = ClassifierInput(files=Path(file.filename))
     output: ClassifierOutput = classifier.classify(input)
 
     return jsonify({"file_class": output.output_class.value}), 200

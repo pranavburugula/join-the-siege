@@ -29,11 +29,14 @@ class TestZeroShotClassifier(TestCase):
         self.mock_model.return_value = test_model_result
 
         expected = ClassifierOutput(
-            output_class=DocumentType.BANK_STATEMENT
+            output_per_file={
+                Path("test.pdf"): DocumentType.BANK_STATEMENT
+
+            }
         )
 
         input = ClassifierInput(
-            file=Path("test.pdf")
+            files=[Path("test.pdf")]
         )
         actual: ClassifierOutput = self.classifier.classify(input)
 
@@ -44,11 +47,13 @@ class TestZeroShotClassifier(TestCase):
         mock_ocr_extractor.extract_text.side_effect = Exception("test exception")
 
         input = ClassifierInput(
-            file=Path("test.pdf")
+            files=[Path("test.pdf")]
         )
 
         expected = ClassifierOutput(
-            output_class=DocumentType.UNKNOWN
+            output_per_file={
+                Path("test.pdf"): DocumentType.UNKNOWN
+            }
         )
 
         actual: ClassifierOutput = self.classifier.classify(input)
@@ -61,11 +66,13 @@ class TestZeroShotClassifier(TestCase):
         mock_ocr_extractor.extract_text.return_value = test_text
         
         input = ClassifierInput(
-            file=Path("test.pdf")
+            files=[Path("test.pdf")]
         )
         
         expected = ClassifierOutput(
-            output_class=DocumentType.UNKNOWN
+            output_per_file={
+                Path("test.pdf"): DocumentType.UNKNOWN
+            }
         )
 
         actual: ClassifierOutput = self.classifier.classify(input)
@@ -83,11 +90,13 @@ class TestZeroShotClassifier(TestCase):
         self.mock_model.return_value = test_model_result
 
         input = ClassifierInput(
-            file=Path("test.pdf")
+            files=[Path("test.pdf")]
         )
 
         expected = ClassifierOutput(
-            output_class=DocumentType.UNKNOWN
+            output_per_file={
+                Path("test.pdf"): DocumentType.UNKNOWN
+            }
         )
 
         actual: ClassifierOutput = self.classifier.classify(input)

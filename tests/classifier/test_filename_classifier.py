@@ -7,10 +7,11 @@ from src.types.classifier_input import ClassifierInput
 
 class TestFilenameClassifier(TestCase):
     def test_classify(self):
-        test_input = ClassifierInput(file=Path('test_file.pdf'))
+        test_path = Path('test_file.pdf')
+        test_input = ClassifierInput(files=[test_path])
 
         classifier = FilenameClassifier()
-        expected = DocumentType.UNKNOWN
+        expected = {test_path: DocumentType.UNKNOWN}
         actual = classifier.classify(test_input)
 
-        self.assertEqual(actual.output_class, expected)
+        self.assertEqual(actual.output_per_file, expected)

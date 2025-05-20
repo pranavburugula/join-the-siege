@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import pymupdf4llm
 import pytesseract
@@ -37,7 +37,7 @@ class OCRExtractor:
             raise ValueError(f"Unsupported file type: {file_path.suffix}")
 
     @classmethod
-    def extract_all_documents(cls, dir_path: Path) -> Dict[Path, str]:
+    def extract_all_documents(cls, dir_path: Optional[Path] = None, paths_list: Optional[List[Path]] = None) -> Dict[Path, str]:
         """Extracts text from all documents in a directory.
 
         Args:
@@ -47,21 +47,28 @@ class OCRExtractor:
             Dict[Path, str]: Dictionary with file paths as keys and extracted text as values.
         """
 
-        if not dir_path.exists():
-            raise FileNotFoundError(f"Directory not found: {dir_path}")
+        file_paths: List[Path] = []
 
-        if not dir_path.is_dir():
-            raise ValueError(f"Path is not a directory: {dir_path}")
+        if dir_path:
+            if not dir_path.exists():
+                raise FileNotFoundError(f"Directory not found: {dir_path}")
+            elif not dir_path.is_dir():
+                raise ValueError(f"Path is not a directory: {dir_path}")
+            
+            _log.info(f"Extracting text from all documents in {dir_path.name}")
 
-        _log.info(f"Extracting text from all documents in {dir_path.name}")
+            file_paths = list(dir_path.glob('**/*'))
+        elif paths_list:
+            file_paths = paths_list
+        else:
+            raise ValueError("Either dir_path or paths_list must be provided")
+
 
         result: Dict[Path, str] = {}
-        file_paths: List[Path] = list(dir_path.glob('**/*'))
 
         _log.info(f"Found {len(file_paths)} files to extract")
 
         for file_path in file_paths:
-            cls.extract_text(file_path)
             result[file_path] = cls.extract_text(file_path)
 
         _log.info(f"Extracted text from {len(result)} files")
@@ -70,7 +77,7 @@ class OCRExtractor:
     
     @classmethod
     def _run_image_ocr_single_file(cls, file_path: Path) -> str:
-        _log.info(f"Using image OCR extractor")
+        _log.debug(f"Using image OCR extractor")
 
         try:
             image = Image.open(file_path)
@@ -82,7 +89,7 @@ class OCRExtractor:
     
     @classmethod
     def _run_pdf_ocr_single_file(cls, file_path: Path) -> str:
-        _log.info(f"Using PDF OCR extractor")
+        _log.debug(f"Using PDF OCR extractor")
 
         markdown_doc: str = pymupdf4llm.to_markdown(file_path)
 
