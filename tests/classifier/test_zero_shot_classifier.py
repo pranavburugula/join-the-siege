@@ -24,13 +24,37 @@ class TestZeroShotClassifier(TestCase):
 
         test_model_result = {
             'scores': [0, 0.4, 0.6],
-            'labels': ['unknown', 'drivers_license', 'bank_statement']
+            'labels': ['other', 'drivers_license', 'bank_statement']
         }
         self.mock_model.return_value = test_model_result
 
         expected = ClassifierOutput(
             output_per_file={
                 Path("test.pdf"): DocumentType.BANK_STATEMENT
+            }
+        )
+
+        input = ClassifierInput(
+            files=[Path("test.pdf")]
+        )
+        actual: ClassifierOutput = self.classifier.classify(input)
+
+        self.assertEqual(expected, actual)
+    
+    @patch('src.classifier.zero_shot_classifier.OCRExtractor')
+    def test_zero_shot_classifier_below_threshold(self, mock_ocr_extractor):
+        test_text = "test text"
+        mock_ocr_extractor.extract_all_documents.return_value = {Path("test.pdf"): test_text}
+
+        test_model_result = {
+            'scores': [0.3, 0.3, 0.4],
+            'labels': ['other', 'drivers_license', 'bank_statement']
+        }
+        self.mock_model.return_value = test_model_result
+
+        expected = ClassifierOutput(
+            output_per_file={
+                Path("test.pdf"): DocumentType.UNKNOWN
             }
         )
 

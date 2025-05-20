@@ -2,7 +2,7 @@ from enum import Enum
 
 
 class DocumentType(Enum):
-    UNKNOWN = "unknown"
+    UNKNOWN = "other"
     DRIVERS_LICENSE = "drivers_license"
     BANK_STATEMENT = "bank_statement"
     INVOICE = "invoice"

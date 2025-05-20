@@ -13,6 +13,8 @@ from src.types.document_type import DocumentType
 
 _log = logging.getLogger(__name__)
 
+CLASSIFICATION_THRESHOLD = 0.6
+
 class ZeroShotClassifier(Classifier):
     """Use zero-shot BERT classification to classify documents.
     
@@ -70,9 +72,12 @@ class ZeroShotClassifier(Classifier):
             labels: List[str] = result['labels']
 
             max_score_index = scores.index(max(scores))
-
-            pred_label = labels[max_score_index]
-            pred_score = scores[max_score_index]
+            if scores[max_score_index] < CLASSIFICATION_THRESHOLD:
+                pred_label = DocumentType.UNKNOWN.value
+                pred_score = scores[max_score_index]
+            else:
+                pred_label = labels[max_score_index]
+                pred_score = scores[max_score_index]
 
             _log.info(f"Classified doc as {pred_label} with score {pred_score}")
             outputs_per_file[file_path] = DocumentType(pred_label)
