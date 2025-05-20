@@ -20,7 +20,7 @@ class TestZeroShotClassifier(TestCase):
     @patch('src.classifier.zero_shot_classifier.OCRExtractor')
     def test_zero_shot_classifier(self, mock_ocr_extractor):
         test_text = "test text"
-        mock_ocr_extractor.extract_text.return_value = test_text
+        mock_ocr_extractor.extract_all_documents.return_value = {Path("test.pdf"): test_text}
 
         test_model_result = {
             'scores': [0, 0.4, 0.6],
@@ -31,7 +31,6 @@ class TestZeroShotClassifier(TestCase):
         expected = ClassifierOutput(
             output_per_file={
                 Path("test.pdf"): DocumentType.BANK_STATEMENT
-
             }
         )
 
@@ -44,7 +43,7 @@ class TestZeroShotClassifier(TestCase):
 
     @patch('src.classifier.zero_shot_classifier.OCRExtractor')
     def test_ocr_exception(self, mock_ocr_extractor):
-        mock_ocr_extractor.extract_text.side_effect = Exception("test exception")
+        mock_ocr_extractor.extract_all_documents.side_effect = Exception("test exception")
 
         input = ClassifierInput(
             files=[Path("test.pdf")]
@@ -63,7 +62,7 @@ class TestZeroShotClassifier(TestCase):
     @patch('src.classifier.zero_shot_classifier.OCRExtractor')
     def test_empty_result(self, mock_ocr_extractor):
         test_text = ""
-        mock_ocr_extractor.extract_text.return_value = test_text
+        mock_ocr_extractor.extract_all_documents.return_value = {Path("test.pdf"): test_text}
         
         input = ClassifierInput(
             files=[Path("test.pdf")]
@@ -82,7 +81,7 @@ class TestZeroShotClassifier(TestCase):
     @patch('src.classifier.zero_shot_classifier.OCRExtractor')
     def test_missing_keys_in_result(self, mock_ocr_extractor):
         test_text = "test text"
-        mock_ocr_extractor.extract_text.return_value = test_text
+        mock_ocr_extractor.extract_all_documents.return_value = {Path("test.pdf"): test_text}
 
         test_model_result = {
             'scores': [0.4, 0.6],

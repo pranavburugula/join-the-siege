@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List
 from src.classifier import Classifier
 from src.types.document_type import DocumentType
 from src.types.classifier_input import ClassifierInput
@@ -8,8 +8,10 @@ from src.types.classifier_output import ClassifierOutput
 
 class FilenameClassifier(Classifier):
     def classify(self, input: ClassifierInput) -> ClassifierOutput:
+        file_list: List[Path] = input.files if input.files else list(input.dir_path.glob("*"))
+
         output_per_file: Dict[Path, DocumentType] = {}
-        for file in input.files:
+        for file in file_list:
             filename = str(file).lower()
 
             result_class: DocumentType = DocumentType.UNKNOWN

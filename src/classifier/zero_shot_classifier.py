@@ -32,13 +32,13 @@ class ZeroShotClassifier(Classifier):
         # Use OCR to get text from files
         try:
             _log.info("Extracting text from file")
-            text_per_file: Dict[Path, str] = OCRExtractor.extract_all_documents(paths_list=input.files)
+            text_per_file: Dict[Path, str] = OCRExtractor.extract_all_documents(paths_list=input.files, dir_path=input.dir_path)
         except Exception:
             _log.exception(f"Failed to run OCR extraction on file {input.files}. Returning UNKNOWN")
             return ClassifierOutput(output_per_file={
                 file: DocumentType.UNKNOWN
                 for file in input.files
-            })
+            } if input.files else {})
 
         labels: List[str] = [doc_type.value for doc_type in DocumentType]
 
@@ -78,7 +78,7 @@ class ZeroShotClassifier(Classifier):
             outputs_per_file[file_path] = DocumentType(pred_label)
 
 
-        _log.info(f"Completed classifying {len(input.files)} files")
+        _log.info(f"Completed classifying {len(outputs_per_file)} files")
         return ClassifierOutput(output_per_file=outputs_per_file)
 
 
