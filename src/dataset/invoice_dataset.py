@@ -12,6 +12,11 @@ _log = logging.getLogger(__name__)
 
 
 class InvoiceDataset(Dataset):
+    """Provides the Invoices dataset.
+    
+    By default, expects the dataset to be located in datasets/invoice_data/data.
+    However, this can be configured with the base_dir arg.
+    """
 
     def __init__(self, num_samples=100, base_dir=Path(DATASET_DIR, 'invoice_data', 'data')):
         super(InvoiceDataset).__init__()

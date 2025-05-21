@@ -12,6 +12,11 @@ _log = logging.getLogger(__name__)
 
 
 class StatementsDataset(Dataset):
+    """Provides the Bank Statements dataset.
+    
+    By default, expects the dataset to be located in datasets/bank_statements/data.
+    However, this can be configured with the base_dir arg.
+    """
 
     def __init__(self, num_samples=100, base_dir=Path(DATASET_DIR, 'bank_statements', 'data')):
         super(StatementsDataset).__init__()
